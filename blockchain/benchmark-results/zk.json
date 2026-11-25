@@ -1,0 +1,34 @@
+{
+  "network": "hardhat",
+  "generatedAt": "2026-11-24T14:11:50.577Z",
+  "circuit": {
+    "name": "private_dispense",
+    "depth": 12,
+    "maxUnits": 4096,
+    "constraints": 7605,
+    "publicSignals": 5,
+    "ptauPower": 13,
+    "setup": "local single-party powers of tau (demo only)"
+  },
+  "runs": 8,
+  "poseidonTreeBuildMs": {
+    "units": 64,
+    "ms": 48
+  },
+  "provingMsNode": {
+    "avg": 1322,
+    "min": 785,
+    "max": 4600
+  },
+  "offchainVerifyMs": 44,
+  "gas": {
+    "privateDispenseAvg": 326446,
+    "groth16VerifierEstimate": 241790,
+    "publicDecommissionAvg": 69243,
+    "overhead": 257203
+  },
+  "artefacts": {
+    "wasmBytes": 2207309,
+    "zkeyBytes": 3290374
+  }
+}

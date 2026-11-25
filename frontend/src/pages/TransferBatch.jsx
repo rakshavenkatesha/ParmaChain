@@ -3,7 +3,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { Web3Context } from "../context/Web3Context";
 import { AuthContext } from "../context/AuthContext";
-import { Send, Wallet, ArrowLeftRight, User, AlertCircle, Info } from "lucide-react";
+import { Wallet, ArrowLeftRight } from "lucide-react";
+import { waitForIndexer, errorMessage } from "../utils/chain";
 
 const TransferBatch = () => {
   const { batchId } = useParams();
@@ -30,14 +31,17 @@ const TransferBatch = () => {
         const batchRes = await axios.get(`/api/batches/${batchId}`);
         setBatch(batchRes.data.data);
 
-        // 2. Fetch approved downstream users
-        // Manufacturers transfer to Distributors. Distributors transfer to Pharmacies.
-        const targetRole = user.role === "Manufacturer" ? "Distributor" : "Pharmacy";
+        // 2. Fetch approved downstream partners. Mirrors the on-chain route policy:
+        //    Manufacturer -> Distributor, Distributor -> Distributor | Pharmacy.
+        const targetRoles = user.role === "Manufacturer" ? ["Distributor"] : ["Pharmacy", "Distributor"];
         try {
-          const partnersRes = await axios.get(`/api/auth/partners?role=${targetRole}`);
-          setRecipients(partnersRes.data.data);
-          if (partnersRes.data.data.length > 0) {
-            setSelectedRecipientId(partnersRes.data.data[0]._id);
+          const lists = await Promise.all(targetRoles.map((r) => axios.get(`/api/auth/partners?role=${r}`)));
+          const partners = lists
+            .flatMap((l) => l.data.data)
+            .filter((p) => p.ethAddress && p.ethAddress.toLowerCase() !== (user.ethAddress || "").toLowerCase());
+          setRecipients(partners);
+          if (partners.length > 0) {
+            setSelectedRecipientId(partners[0]._id);
             setIsManual(false);
           } else {
             setIsManual(true);
@@ -95,35 +99,21 @@ const TransferBatch = () => {
     }
 
     if (!contract) {
-      setError("Smart contract ABI not loaded. Deploy contracts first.");
+      setError("MetaMask is not on the PharmaChain network (chain 2026). Use the red banner at the top of the page to switch.");
       return;
     }
 
     setSubmitLoading(true);
 
     try {
-      // 1. Trigger MetaMask wallet transaction
-      console.log(`Sending transfer tx for batch ${batchId} to ${targetAddress}...`);
+      // The contract enforces the route policy; the backend indexer mirrors the event.
       const tx = await contract.transferOwnership(batchId, targetAddress);
-      
-      console.log("Transaction sent:", tx.hash);
-      await tx.wait();
-      console.log("Transaction confirmed on-chain.");
-
-      // 2. Log transfer event off-chain
-      const res = await axios.post("/api/transfers/initiate", {
-        batchId,
-        toEthAddress: targetAddress,
-        txHash: tx.hash
-      });
-
-      if (res.data.success) {
-        alert(`Ownership transfer initiated. Batch status is now 'In Transit'.`);
-        navigate("/dashboard");
-      }
+      const receipt = await tx.wait();
+      await waitForIndexer(receipt);
+      navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      setError("Blockchain transaction failed: " + (err.reason || err.message));
+      setError("Blockchain transaction failed: " + errorMessage(err));
     } finally {
       setSubmitLoading(false);
     }

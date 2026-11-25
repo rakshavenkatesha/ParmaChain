@@ -1,0 +1,16 @@
+{
+  "publicNetwork": "Local public-chain stand-in (publicLocal)",
+  "interval": 20,
+  "checkpoints": 5,
+  "gasPerCheckpoint": [
+    184552,
+    150768,
+    150768,
+    184564,
+    150780
+  ],
+  "gasFirst": 184552,
+  "gasSteadyStateAvg": 159220,
+  "note": "Gas of CheckpointAnchor.submitCheckpoint; on Amoy, cost = gas x gas price (test POL, free from the faucet).",
+  "updatedAt": "2026-11-25T04:34:23.300Z"
+}

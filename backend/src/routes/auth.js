@@ -29,7 +29,8 @@ router.post("/register", async (req, res) => {
       companyName,
       licenseNumber,
       ethAddress,
-      licenseDocumentUrl
+      licenseDocumentUrl,
+      location
     } = req.body;
 
     const userExists = await User.findOne({ email });
@@ -40,8 +41,20 @@ router.post("/register", async (req, res) => {
         .json({ success: false, message: "User already exists with this email" });
     }
 
-    // Admins are approved by default. Other roles need approval.
-    const isApproved = role === "Admin";
+    // SECURITY: the regulator/admin account is provisioned out-of-band (seeder + on-chain
+    // REGULATOR_ROLE). Self-registration as Admin would be a privilege escalation.
+    if (!["Manufacturer", "Distributor", "Pharmacy"].includes(role)) {
+      return res.status(400).json({ success: false, message: "Role must be Manufacturer, Distributor or Pharmacy" });
+    }
+    if (!/^0x[0-9a-fA-F]{40}$/.test(ethAddress || "")) {
+      return res.status(400).json({ success: false, message: "A valid Ethereum wallet address is required" });
+    }
+    if (await User.exists({ ethAddress: ethAddress.toLowerCase() })) {
+      return res.status(400).json({ success: false, message: "This wallet address is already registered" });
+    }
+
+    // Every organisation starts unapproved until the regulator admits it on-chain.
+    const isApproved = false;
 
     const user = await User.create({
       name,
@@ -52,7 +65,11 @@ router.post("/register", async (req, res) => {
       licenseNumber,
       licenseDocumentUrl,
       isApproved,
-      ethAddress
+      ethAddress,
+      location:
+        location && Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lon))
+          ? { city: String(location.city || "").slice(0, 80), lat: Number(location.lat), lon: Number(location.lon) }
+          : undefined
     });
 
     if (user) {
@@ -124,6 +141,13 @@ router.put("/profile", protect, async (req, res) => {
       user.name = req.body.name || user.name;
       user.companyName = req.body.companyName || user.companyName;
       user.licenseNumber = req.body.licenseNumber || user.licenseNumber;
+      // The wallet is the on-chain identity; once approved it can only change via the regulator.
+      if (req.body.ethAddress && req.body.ethAddress.toLowerCase() !== user.ethAddress && user.isApproved) {
+        return res.status(400).json({
+          success: false,
+          message: "Your wallet is registered on-chain. Ask the regulator to re-admit a new wallet."
+        });
+      }
       user.ethAddress = req.body.ethAddress || user.ethAddress;
 
       if (req.body.password) {

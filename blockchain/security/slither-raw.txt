@@ -1,0 +1,198 @@
+
+Detector: incorrect-return
+Groth16Verifier.verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[5]) (contracts/zk/Groth16Verifier.sol#71-195) calls Groth16Verifier.verifyProof.asm_0.checkField() (contracts/zk/Groth16Verifier.sol#73-78) which halt the execution return(uint256,uint256)(0,0x20) (contracts/zk/Groth16Verifier.sol#76)
+Groth16Verifier.verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[5]) (contracts/zk/Groth16Verifier.sol#71-195) calls Groth16Verifier.verifyProof.asm_0.checkPairing() (contracts/zk/Groth16Verifier.sol#106-171) which halt the execution return(uint256,uint256)(0,0x20) (contracts/zk/Groth16Verifier.sol#102)
+Groth16Verifier.verifyProof.asm_0.checkPairing() (contracts/zk/Groth16Verifier.sol#106-171) calls Groth16Verifier.verifyProof.asm_0.g1_mulAccC() (contracts/zk/Groth16Verifier.sol#81-104) which halt the execution return(uint256,uint256)(0,0x20) (contracts/zk/Groth16Verifier.sol#102)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-return-in-assembly
+
+Detector: uninitialized-state
+CheckpointAnchor._heights (contracts/checkpoint/CheckpointAnchor.sol#40) is never initialized. It is used in:
+	- CheckpointAnchor.submitCheckpoint(uint256,uint64,bytes32,bytes32,bytes32) (contracts/checkpoint/CheckpointAnchor.sol#72-113)
+	- CheckpointAnchor.checkpointCount(uint256) (contracts/checkpoint/CheckpointAnchor.sol#116-118)
+	- CheckpointAnchor.heightAt(uint256,uint256) (contracts/checkpoint/CheckpointAnchor.sol#120-122)
+	- CheckpointAnchor.latestCheckpoint(uint256) (contracts/checkpoint/CheckpointAnchor.sol#128-132)
+	- CheckpointAnchor.recentCheckpoints(uint256,uint256) (contracts/checkpoint/CheckpointAnchor.sol#135-140)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+Detector: incorrect-equality
+AccessRegistry.verifyLicense(address,string) (contracts/AccessRegistry.sol#149-151) uses a dangerous strict equality:
+	- _participants[account].licenseHash == keccak256(bytes)(bytes(licenseNumber)) (contracts/AccessRegistry.sol#150)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Detector: uninitialized-local
+PharmaChain.acceptWithAggregation(string,PharmaChain.AggregateScan[]).size (contracts/PharmaChain.sol#330) is a local variable never initialized
+PharmaChain.acceptWithAggregation(string,PharmaChain.AggregateScan[]).lotRoot (contracts/PharmaChain.sol#331) is a local variable never initialized
+PharmaChain.acceptWithAggregation(string,PharmaChain.AggregateScan[]).start (contracts/PharmaChain.sol#329) is a local variable never initialized
+ColdChainMonitor._validReadings(ColdChainMonitor.Monitor,bytes32,uint64,ColdChainMonitor.SignedReading[]).used (contracts/ColdChainMonitor.sol#129) is a local variable never initialized
+ColdChainMonitor.mktOf(int16[]).sum (contracts/ColdChainMonitor.sol#218) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+Detector: unused-return
+ColdChainMonitor._validReadings(ColdChainMonitor.Monitor,bytes32,uint64,ColdChainMonitor.SignedReading[]) (contracts/ColdChainMonitor.sol#124-144) ignores return value by (signer,err,None) = ECDSA.tryRecover(digest,readings[i].signature) (contracts/ColdChainMonitor.sol#132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Detector: events-access
+CheckpointAnchor.transferOwnership(address) (contracts/checkpoint/CheckpointAnchor.sol#64-67) should emit an event for: 
+	- owner = newOwner (contracts/checkpoint/CheckpointAnchor.sol#66) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Detector: missing-zero-check
+PharmaChain.constructor(AccessRegistry,address)._governance (contracts/PharmaChain.sol#162) lacks a zero-check on :
+		- governance = _governance (contracts/PharmaChain.sol#164)
+PharmaChain.setPrivateDispenser(address).module (contracts/PharmaChain.sol#169) lacks a zero-check on :
+		- privateDispenser = module (contracts/PharmaChain.sol#172)
+ValidatorSet.constructor(address[],address)._owner (contracts/ValidatorSet.sol#27) lacks a zero-check on :
+		- owner = _owner (contracts/ValidatorSet.sol#28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Detector: reentrancy-events
+Reentrancy in Governance.execute(uint256) (contracts/Governance.sol#104-118):
+	External calls:
+	- (ok,ret) = p.target.call(p.data) (contracts/Governance.sol#109)
+	Event emitted after the call(s):
+	- ProposalExecuted(id,msg.sender) (contracts/Governance.sol#116)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Detector: timestamp
+AccessRegistry.registerParticipant(address,AccessRegistry.Role,string,bytes32) (contracts/AccessRegistry.sol#82-106) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(_participants[account].role == Role.None,Account already registered) (contracts/AccessRegistry.sol#93)
+AccessRegistry.suspendParticipant(address,string) (contracts/AccessRegistry.sol#109-116) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(p.role != Role.None && p.role != Role.Regulator,Not suspendable) (contracts/AccessRegistry.sol#111)
+	- require(bool,string)(p.active,Already suspended) (contracts/AccessRegistry.sol#112)
+AccessRegistry.reinstateParticipant(address) (contracts/AccessRegistry.sol#118-125) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(p.role != Role.None && p.role != Role.Regulator,Not reinstatable) (contracts/AccessRegistry.sol#120)
+	- require(bool,string)(! p.active,Already active) (contracts/AccessRegistry.sol#121)
+AccessRegistry.verifyLicense(address,string) (contracts/AccessRegistry.sol#149-151) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _participants[account].licenseHash == keccak256(bytes)(bytes(licenseNumber)) (contracts/AccessRegistry.sol#150)
+Governance._approve(uint256) (contracts/Governance.sol#94-101) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! p.executed && ! p.cancelled,Proposal closed) (contracts/Governance.sol#96)
+Governance.execute(uint256) (contracts/Governance.sol#104-118) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! p.executed && ! p.cancelled,Proposal closed) (contracts/Governance.sol#106)
+	- require(bool,string)(p.approvals >= threshold,Not enough approvals) (contracts/Governance.sol#107)
+Governance.cancel(uint256) (contracts/Governance.sol#120-126) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(msg.sender == p.proposer,Only the proposer can cancel) (contracts/Governance.sol#122)
+	- require(bool,string)(! p.executed && ! p.cancelled,Proposal closed) (contracts/Governance.sol#123)
+PharmaChain._load(string) (contracts/PharmaChain.sol#184-188) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(b.exists,Batch does not exist) (contracts/PharmaChain.sol#187)
+PharmaChain._requireOperable(PharmaChain.Batch) (contracts/PharmaChain.sol#190-194) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp < b.expiryDate,Batch has expired) (contracts/PharmaChain.sol#193)
+PharmaChain.registerBatch(PharmaChain.RegisterParams) (contracts/PharmaChain.sol#238-275) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! _batches[key].exists,Batch ID already exists) (contracts/PharmaChain.sol#241)
+	- require(bool,string)(p.expiryDate > block.timestamp,Batch already expired) (contracts/PharmaChain.sol#244)
+PharmaChain.splitBatch(string,string,uint32) (contracts/PharmaChain.sol#355-404) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! _batches[childKey].exists,Child ID already exists) (contracts/PharmaChain.sol#364)
+PharmaChain._view(bytes32) (contracts/PharmaChain.sol#572-583) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(b.exists,Batch does not exist) (contracts/PharmaChain.sol#574)
+	- v.expired = block.timestamp >= b.expiryDate (contracts/PharmaChain.sol#577)
+PharmaChain.getBatchHistory(string) (contracts/PharmaChain.sol#593-597) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(_batches[key].exists,Batch does not exist) (contracts/PharmaChain.sol#595)
+PharmaChain.verifyUnit(string,uint256,bytes32,bytes32,PharmaChain.UnitProof) (contracts/PharmaChain.sol#611-624) uses timestamp for comparisons
+	Dangerous comparisons:
+	- expired = block.timestamp >= lot.expiryDate (contracts/PharmaChain.sol#623)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: assembly
+Governance.execute(uint256) (contracts/Governance.sol#104-118) uses assembly
+	- INLINE ASM (contracts/Governance.sol#112-114)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Detector: assembly
+Groth16Verifier.verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[5]) (contracts/zk/Groth16Verifier.sol#71-195) uses assembly
+	- INLINE ASM (contracts/zk/Groth16Verifier.sol#72-194)
+Groth16Verifier.verifyProof.asm_0.checkField() (contracts/zk/Groth16Verifier.sol#73-78) uses assembly
+	- INLINE ASM (contracts/zk/Groth16Verifier.sol#73-78)
+Groth16Verifier.verifyProof.asm_0.g1_mulAccC() (contracts/zk/Groth16Verifier.sol#81-104) uses assembly
+	- INLINE ASM (contracts/zk/Groth16Verifier.sol#81-104)
+Groth16Verifier.verifyProof.asm_0.checkPairing() (contracts/zk/Groth16Verifier.sol#106-171) uses assembly
+	- INLINE ASM (contracts/zk/Groth16Verifier.sol#106-171)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Detector: costly-loop
+ValidatorSet.removeValidator(address) (contracts/ValidatorSet.sol#54-66) has costly operations inside a loop:
+	- validators.pop() (contracts/ValidatorSet.sol#60)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Detector: solc-version
+Version constraint >=0.7.0<0.9.0 is too complex.
+It is used by:
+	- >=0.7.0<0.9.0 (contracts/zk/Groth16Verifier.sol#21)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Detector: low-level-calls
+Low level call in Governance.execute(uint256) (contracts/Governance.sol#104-118):
+	- (ok,ret) = p.target.call(p.data) (contracts/Governance.sol#109)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Detector: missing-inheritance
+Groth16Verifier (contracts/zk/Groth16Verifier.sol#23-196) should inherit from IGroth16Verifier (contracts/zk/PrivateDispenser.sol#7-9)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Detector: naming-convention
+Parameter Governance.setSigners(address[],uint16)._signers (contracts/Governance.sol#66) is not in mixedCase
+Parameter Governance.setSigners(address[],uint16)._threshold (contracts/Governance.sol#66) is not in mixedCase
+Parameter ValidatorSet.setController(address)._controller (contracts/ValidatorSet.sol#37) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Detector: naming-convention
+Parameter Groth16Verifier.verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[5])._pA (contracts/zk/Groth16Verifier.sol#71) is not in mixedCase
+Parameter Groth16Verifier.verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[5])._pB (contracts/zk/Groth16Verifier.sol#71) is not in mixedCase
+Parameter Groth16Verifier.verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[5])._pC (contracts/zk/Groth16Verifier.sol#71) is not in mixedCase
+Parameter Groth16Verifier.verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[5])._pubSignals (contracts/zk/Groth16Verifier.sol#71) is not in mixedCase
+Constant Groth16Verifier.r (contracts/zk/Groth16Verifier.sol#25) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.q (contracts/zk/Groth16Verifier.sol#27) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.alphax (contracts/zk/Groth16Verifier.sol#30) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.alphay (contracts/zk/Groth16Verifier.sol#31) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.betax1 (contracts/zk/Groth16Verifier.sol#32) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.betax2 (contracts/zk/Groth16Verifier.sol#33) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.betay1 (contracts/zk/Groth16Verifier.sol#34) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.betay2 (contracts/zk/Groth16Verifier.sol#35) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.gammax1 (contracts/zk/Groth16Verifier.sol#36) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.gammax2 (contracts/zk/Groth16Verifier.sol#37) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.gammay1 (contracts/zk/Groth16Verifier.sol#38) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.gammay2 (contracts/zk/Groth16Verifier.sol#39) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.deltax1 (contracts/zk/Groth16Verifier.sol#40) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.deltax2 (contracts/zk/Groth16Verifier.sol#41) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.deltay1 (contracts/zk/Groth16Verifier.sol#42) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.deltay2 (contracts/zk/Groth16Verifier.sol#43) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC0x (contracts/zk/Groth16Verifier.sol#46) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC0y (contracts/zk/Groth16Verifier.sol#47) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC1x (contracts/zk/Groth16Verifier.sol#49) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC1y (contracts/zk/Groth16Verifier.sol#50) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC2x (contracts/zk/Groth16Verifier.sol#52) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC2y (contracts/zk/Groth16Verifier.sol#53) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC3x (contracts/zk/Groth16Verifier.sol#55) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC3y (contracts/zk/Groth16Verifier.sol#56) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC4x (contracts/zk/Groth16Verifier.sol#58) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC4y (contracts/zk/Groth16Verifier.sol#59) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC5x (contracts/zk/Groth16Verifier.sol#61) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.IC5y (contracts/zk/Groth16Verifier.sol#62) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.pVk (contracts/zk/Groth16Verifier.sol#66) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.pPairing (contracts/zk/Groth16Verifier.sol#67) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Groth16Verifier.pLastMem (contracts/zk/Groth16Verifier.sol#69) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Detector: too-many-digits
+ColdChainMonitor.slitherConstructorConstantVariables() (contracts/ColdChainMonitor.sol#25-222) uses literals with too many digits:
+	- T_REF = 278_150000000000000000 (contracts/ColdChainMonitor.sol#32)
+ColdChainMonitor.slitherConstructorConstantVariables() (contracts/ColdChainMonitor.sol#25-222) uses literals with too many digits:
+	- KELVIN = 273_150000000000000000 (contracts/ColdChainMonitor.sol#33)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Detector: cache-array-length
+Loop condition i < signers.length (contracts/Governance.sol#54) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < validators.length (contracts/ValidatorSet.sol#49) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+. analyzed (53 contracts with 102 detectors), 81 result(s) found

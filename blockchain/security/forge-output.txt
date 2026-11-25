@@ -1,0 +1,48 @@
+Compiling 3 files with Solc 0.8.24
+Solc 0.8.24 finished in 15.16s
+Compiler run successful!
+
+Ran 5 tests for forge-test/Labels.t.sol:LabelsFuzzTest
+[PASS] testFuzz_forgedHiddenCodeNeverDispenses(uint8,bytes10) (runs: 1000, μ: 80967, ~: 80997)
+[PASS] testFuzz_forgedPublicTagNeverVerifies(uint8,bytes32,bytes32) (runs: 1000, μ: 34873, ~: 34871)
+[PASS] testFuzz_indexSwapRejected(uint8,uint8) (runs: 1000, μ: 75710, ~: 75711)
+[PASS] testFuzz_neverDispensedTwice(uint8,uint8) (runs: 1000, μ: 371183, ~: 369633)
+[PASS] test_everyGenuinePackVerifies() (gas: 272982)
+Suite result: ok. 5 passed; 0 failed; 0 skipped; finished in 694.31ms (2.13s CPU time)
+
+Ran 3 tests for forge-test/Governance.t.sol:GovernanceTest
+[PASS] invariant_noExecutionBelowThreshold() (runs: 128, calls: 8192, reverts: 0)
+
+╭------------+----------+-------+---------+----------╮
+| Contract   | Selector | Calls | Reverts | Discards |
++====================================================+
+| GovHandler | approve  | 2775  | 0       | 0        |
+|------------+----------+-------+---------+----------|
+| GovHandler | execute  | 2731  | 0       | 0        |
+|------------+----------+-------+---------+----------|
+| GovHandler | propose  | 2686  | 0       | 0        |
+╰------------+----------+-------+---------+----------╯
+
+[PASS] testFuzz_outsiderCannotApprove(address) (runs: 1000, μ: 219190, ~: 219190)
+[PASS] testFuzz_thresholdEnforced(uint8) (runs: 1000, μ: 315852, ~: 276532)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 4.11s (5.34s CPU time)
+
+Ran 1 test for forge-test/Conservation.t.sol:ConservationInvariantTest
+[PASS]
+ConservationInvariantTest invariants:
+[PASS] invariant_rangesDisjoint
+[PASS] invariant_sameOrigin
+[PASS] invariant_unitsConserved
+ ConservationInvariantTest invariants (runs: 128, calls: 8192, reverts: 0)
+
+╭--------------+----------+-------+---------+----------╮
+| Contract     | Selector | Calls | Reverts | Discards |
++======================================================+
+| SplitHandler | ship     | 4119  | 0       | 0        |
+|--------------+----------+-------+---------+----------|
+| SplitHandler | split    | 4073  | 0       | 0        |
+╰--------------+----------+-------+---------+----------╯
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 191.40s (191.39s CPU time)
+
+Ran 3 test suites in 191.41s (196.21s CPU time): 9 tests passed, 0 failed, 0 skipped (9 total tests)

@@ -1,0 +1,179 @@
+# PharmaChain consortium network - 4 Hyperledger Besu validators running QBFT consensus.
+#
+#   cd blockchain && node scripts/network/generate-genesis.js   # once: creates genesis + node keys
+#   cd ../network && docker compose up -d                        # start the chain
+#   docker compose logs -f regulator                             # watch blocks being sealed
+#   docker compose stop pharmacy                                 # fault-tolerance demo (f = 1)
+#   docker compose stop / start                                  # pause / resume (keeps all data)
+#   docker compose down -v                                       # DESTRUCTIVE: wipe all chain data
+#
+# RPC endpoints on the host: regulator 8545 | manufacturer 8546 | distributor 8547 | pharmacy 8548
+
+x-besu-node: &besu-node
+  image: hyperledger/besu:${BESU_VERSION:-26.11.2}
+  restart: unless-stopped
+  entrypoint: ["/opt/besu/bin/besu"]
+  environment:
+    - BESU_OPTS=-Xmx1g
+  networks: [pharmachain]
+
+services:
+  regulator:
+    <<: *besu-node
+    container_name: pharmachain-regulator
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/opt/besu/data
+      - --node-private-key-file=/opt/besu/keys/key
+      - --permissions-nodes-config-file-enabled=true
+      - --permissions-nodes-config-file=/config/permissions_config.toml
+      - --sync-mode=FULL
+      - --min-gas-price=0
+      - --revert-reason-enabled=true
+      - --rpc-http-enabled=true
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,QBFT,TXPOOL,ADMIN,DEBUG,PERM
+      - --rpc-http-cors-origins=*
+      - --host-allowlist=*
+      - --p2p-host=172.16.239.11
+      - --p2p-port=30303
+    volumes:
+      - ./genesis.json:/config/genesis.json:ro
+      - ./permissions_config.toml:/config/permissions_config.toml
+      - ./nodes/regulator:/opt/besu/keys:ro
+      - regulator-data:/opt/besu/data
+    ports: ["8545:8545"]
+    networks:
+      pharmachain:
+        ipv4_address: 172.16.239.11
+
+  manufacturer:
+    <<: *besu-node
+    container_name: pharmachain-manufacturer
+    depends_on: [regulator]
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/opt/besu/data
+      - --node-private-key-file=/opt/besu/keys/key
+      - --permissions-nodes-config-file-enabled=true
+      - --permissions-nodes-config-file=/config/permissions_config.toml
+      - --sync-mode=FULL
+      - --min-gas-price=0
+      - --revert-reason-enabled=true
+      - --rpc-http-enabled=true
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,QBFT,TXPOOL,ADMIN,DEBUG,PERM
+      - --rpc-http-cors-origins=*
+      - --host-allowlist=*
+      - --p2p-host=172.16.239.12
+      - --p2p-port=30303
+      - --bootnodes=${BOOTNODE}
+    volumes:
+      - ./genesis.json:/config/genesis.json:ro
+      - ./permissions_config.toml:/config/permissions_config.toml
+      - ./nodes/manufacturer:/opt/besu/keys:ro
+      - manufacturer-data:/opt/besu/data
+    ports: ["8546:8545"]
+    networks:
+      pharmachain:
+        ipv4_address: 172.16.239.12
+
+  distributor:
+    <<: *besu-node
+    container_name: pharmachain-distributor
+    depends_on: [regulator]
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/opt/besu/data
+      - --node-private-key-file=/opt/besu/keys/key
+      - --permissions-nodes-config-file-enabled=true
+      - --permissions-nodes-config-file=/config/permissions_config.toml
+      - --sync-mode=FULL
+      - --min-gas-price=0
+      - --revert-reason-enabled=true
+      - --rpc-http-enabled=true
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,QBFT,TXPOOL,ADMIN,DEBUG,PERM
+      - --rpc-http-cors-origins=*
+      - --host-allowlist=*
+      - --p2p-host=172.16.239.13
+      - --p2p-port=30303
+      - --bootnodes=${BOOTNODE}
+    volumes:
+      - ./genesis.json:/config/genesis.json:ro
+      - ./permissions_config.toml:/config/permissions_config.toml
+      - ./nodes/distributor:/opt/besu/keys:ro
+      - distributor-data:/opt/besu/data
+    ports: ["8547:8545"]
+    networks:
+      pharmachain:
+        ipv4_address: 172.16.239.13
+
+  pharmacy:
+    <<: *besu-node
+    container_name: pharmachain-pharmacy
+    depends_on: [regulator]
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/opt/besu/data
+      - --node-private-key-file=/opt/besu/keys/key
+      - --permissions-nodes-config-file-enabled=true
+      - --permissions-nodes-config-file=/config/permissions_config.toml
+      - --sync-mode=FULL
+      - --min-gas-price=0
+      - --revert-reason-enabled=true
+      - --rpc-http-enabled=true
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,QBFT,TXPOOL,ADMIN,DEBUG,PERM
+      - --rpc-http-cors-origins=*
+      - --host-allowlist=*
+      - --p2p-host=172.16.239.14
+      - --p2p-port=30303
+      - --bootnodes=${BOOTNODE}
+    volumes:
+      - ./genesis.json:/config/genesis.json:ro
+      - ./permissions_config.toml:/config/permissions_config.toml
+      - ./nodes/pharmacy:/opt/besu/keys:ro
+      - pharmacy-data:/opt/besu/data
+    ports: ["8548:8545"]
+    networks:
+      pharmachain:
+        ipv4_address: 172.16.239.14
+
+
+  # Public-chain stand-in for checkpoint anchoring (replace with Polygon Amoy via AMOY_RPC_URL).
+  # Anvil keeps its state in the publicchain-data volume, so anchors survive restarts.
+  publicchain:
+    image: ghcr.io/foundry-rs/foundry:latest
+    container_name: pharmachain-publicchain
+    restart: unless-stopped
+    user: root
+    entrypoint: ["anvil"]
+    command:
+      - --host=0.0.0.0
+      - --port=8600
+      - --chain-id=31337
+      - --state=/data/state.json
+      - --state-interval=5
+      - --preserve-historical-states
+    volumes:
+      - publicchain-data:/data
+    ports: ["8600:8600"]
+    networks: [pharmachain]
+networks:
+  pharmachain:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.239.0/24
+
+volumes:
+  regulator-data:
+  manufacturer-data:
+  distributor-data:
+  pharmacy-data:
+  publicchain-data:

@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Batch = require("../models/Batch");
 const Anomaly = require("../models/Anomaly");
 const { protect, authorize } = require("../middleware/auth");
+const { getChain, ROLE_IDS, ROLE_NAMES } = require("../config/chain");
 
 const router = express.Router();
 
@@ -15,7 +16,19 @@ router.use(authorize("Admin"));
 // @access  Private (Admin)
 router.get("/users", async (req, res) => {
   try {
-    const users = await User.find({}).sort({ createdAt: -1 });
+    const users = await User.find({}).sort({ createdAt: -1 }).lean();
+    // annotate each user with their live on-chain role
+    const chain = getChain();
+    for (const u of users) {
+      u.onChainRole = null;
+      if (chain && u.ethAddress) {
+        try {
+          u.onChainRole = ROLE_NAMES[Number(await chain.registry.activeRoleOf(u.ethAddress))];
+        } catch {
+          /* node offline */
+        }
+      }
+    }
     res.json({ success: true, count: users.length, data: users });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -30,6 +43,22 @@ router.put("/users/:userId/approve", async (req, res) => {
     const user = await User.findById(req.params.userId);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // The approval must already exist ON-CHAIN (the admin signs AccessRegistry.registerParticipant
+    // with the regulator wallet first). The database only mirrors the ledger.
+    const chain = getChain();
+    if (chain) {
+      if (!user.ethAddress) {
+        return res.status(400).json({ success: false, message: "User has no wallet address to admit on-chain" });
+      }
+      const onChainRole = Number(await chain.registry.activeRoleOf(user.ethAddress));
+      if (onChainRole !== ROLE_IDS[user.role]) {
+        return res.status(409).json({
+          success: false,
+          message: `Wallet ${user.ethAddress} is not registered on-chain as ${user.role}. Sign the AccessRegistry transaction first.`
+        });
+      }
     }
 
     user.isApproved = true;
@@ -79,6 +108,38 @@ router.put("/anomalies/:anomalyId/resolve", async (req, res) => {
       success: true,
       message: "Anomaly marked as resolved successfully"
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @desc    Unopened-pack returns awaiting regulator approval (from on-chain events)
+// @route   GET /api/admin/returns
+// @access  Private (Admin)
+router.get("/returns", async (req, res) => {
+  try {
+    const ChainEvent = require("../models/ChainEvent");
+    const [requested, returned] = await Promise.all([
+      ChainEvent.find({ name: "ReturnRequested" }).sort({ blockNumber: -1 }).limit(200),
+      ChainEvent.find({ name: "UnitReturned" }).select("batchKey unitIndex blockNumber")
+    ]);
+    const done = new Set(returned.map((e) => `${e.batchKey}:${e.unitIndex}`));
+    const pending = [];
+    for (const r of requested) {
+      if (done.has(`${r.batchKey}:${r.unitIndex}`)) continue;
+      const batch = await Batch.findOne({ batchKey: r.batchKey }).select("batchId drugName");
+      const pharmacy = await User.findOne({ ethAddress: r.actor }).select("companyName name");
+      pending.push({
+        batchId: batch ? batch.batchId : r.batchKey,
+        drugName: batch ? batch.drugName : null,
+        unitIndex: r.unitIndex,
+        reason: r.args?.reason,
+        pharmacy: pharmacy ? pharmacy.companyName || pharmacy.name : r.actor,
+        requestedAt: r.timestamp,
+        txHash: r.txHash
+      });
+    }
+    res.json({ success: true, data: pending });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

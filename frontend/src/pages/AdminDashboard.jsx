@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { keccak256, toUtf8Bytes } from "ethers";
+import { Web3Context } from "../context/Web3Context";
+import { ROLE_IDS, errorMessage } from "../utils/chain";
 import axios from "axios";
 import { Users, ShieldAlert, CheckCircle, Clock, Trash2, ArrowUpRight, Award } from "lucide-react";
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState("approvals");
+  const { registry, isConnected, connectWallet } = useContext(Web3Context);
+  const [activeTab, setActiveTab] = useState(window.location.pathname.endsWith("anomalies") ? "anomalies" : "approvals");
   const [users, setUsers] = useState([]);
   const [anomalies, setAnomalies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,19 +37,34 @@ const AdminDashboard = () => {
     fetchData();
   }, [activeTab]);
 
-  const handleApprove = async (userId) => {
-    setActionLoading((prev) => ({ ...prev, [userId]: true }));
+  /**
+   * Admission is a two-step, chain-first process:
+   *  1. the regulator wallet signs AccessRegistry.registerParticipant(wallet, role, name, keccak(licence))
+   *  2. the backend checks the on-chain role and only then mirrors isApproved = true
+   */
+  const handleApprove = async (u) => {
+    setActionLoading((prev) => ({ ...prev, [u._id]: true }));
     try {
-      const res = await axios.put(`/api/admin/users/${userId}/approve`);
-      if (res.data.success) {
-        alert(res.data.message);
-        fetchData();
+      if (u.onChainRole !== u.role) {
+        if (!isConnected || !registry) {
+          await connectWallet();
+          throw new Error("Connect the regulator wallet (MetaMask) and click Admit again.");
+        }
+        const tx = await registry.registerParticipant(
+          u.ethAddress,
+          ROLE_IDS[u.role],
+          u.companyName || u.name,
+          keccak256(toUtf8Bytes(u.licenseNumber || ""))
+        );
+        await tx.wait();
       }
+      const res = await axios.put(`/api/admin/users/${u._id}/approve`);
+      if (res.data.success) fetchData();
     } catch (err) {
       console.error(err);
-      alert("Verification approval failed: " + (err.response?.data?.message || err.message));
+      alert("Admission failed: " + errorMessage(err));
     } finally {
-      setActionLoading((prev) => ({ ...prev, [userId]: false }));
+      setActionLoading((prev) => ({ ...prev, [u._id]: false }));
     }
   };
 
@@ -70,7 +89,7 @@ const AdminDashboard = () => {
       <div>
         <h1 className="text-2xl font-bold font-sans">Administrative Console</h1>
         <p className="text-slate-400 text-xs mt-1">
-          Perform compliance checks and manage off-chain risk metrics.
+          Admit organisations on-chain (regulator wallet) and review evidence emitted by the smart contracts.
         </p>
       </div>
 
@@ -130,6 +149,7 @@ const AdminDashboard = () => {
                     <th className="p-4">Licensing Info</th>
                     <th className="p-4">Eth Address</th>
                     <th className="p-4">Status</th>
+                    <th className="p-4">On-chain role</th>
                     <th className="p-4 text-right">Verification</th>
                   </tr>
                 </thead>
@@ -158,22 +178,25 @@ const AdminDashboard = () => {
                       <td className="p-4">
                         <span
                           className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                            u.isApproved
+                            u.isApproved && u.onChainRole === u.role
                               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                               : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                           }`}
                         >
-                          {u.isApproved ? "Approved" : "Pending Approval"}
+                          {u.isApproved && u.onChainRole === u.role ? "Approved" : u.isApproved ? "Not on this chain" : "Pending Approval"}
                         </span>
                       </td>
+                      <td className="p-4 font-mono text-[10px]">
+                        <span className={u.onChainRole === u.role ? "text-emerald-400" : "text-slate-500"}>{u.onChainRole || "unknown"}</span>
+                      </td>
                       <td className="p-4 text-right">
-                        {!u.isApproved && (
+                        {(!u.isApproved || (u.onChainRole && u.onChainRole !== u.role)) && (
                           <button
-                            onClick={() => handleApprove(u._id)}
+                            onClick={() => handleApprove(u)}
                             disabled={actionLoading[u._id]}
                             className="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 disabled:bg-sky-500/50 text-slate-950 font-bold rounded-xl transition shadow-lg text-[10px] uppercase tracking-wider"
                           >
-                            {actionLoading[u._id] ? "Verifying..." : "Approve"}
+                            {actionLoading[u._id] ? "Signing..." : u.onChainRole === u.role ? "Sync approval" : "Admit on-chain"}
                           </button>
                         )}
                       </td>

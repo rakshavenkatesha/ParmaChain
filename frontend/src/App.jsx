@@ -10,6 +10,7 @@ import { Web3Provider } from "./context/Web3Context";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
+import NetworkGuard from "./components/NetworkGuard";
 
 // Pages
 import Login from "./pages/Login";
@@ -19,14 +20,20 @@ import CreateBatch from "./pages/CreateBatch";
 import TransferBatch from "./pages/TransferBatch";
 import VerifyProduct from "./pages/VerifyProduct";
 import AdminDashboard from "./pages/AdminDashboard";
+import UnitLabels from "./pages/UnitLabels";
+import Explorer from "./pages/Explorer";
+import BatchDetail from "./pages/BatchDetail";
+import GovernancePage from "./pages/GovernancePage";
+import ReturnsPage from "./pages/ReturnsPage";
 
 const Layout = ({ children }) => {
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-950 text-slate-100">
+    <div className="flex flex-col h-screen overflow-hidden text-slate-100">
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto p-6 bg-slate-950">
+        <main className="flex-1 overflow-y-auto p-6">
+          <NetworkGuard />
           {children}
         </main>
       </div>
@@ -44,6 +51,7 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify" element={<VerifyProduct />} />
+            <Route path="/explorer" element={<Explorer />} />
 
             {/* General Protected Routes */}
             <Route element={<ProtectedRoute />}>
@@ -52,6 +60,14 @@ const App = () => {
                 element={
                   <Layout>
                     <Dashboard />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/batch/:batchId"
+                element={
+                  <Layout>
+                    <BatchDetail />
                   </Layout>
                 }
               />
@@ -84,6 +100,14 @@ const App = () => {
                   </Layout>
                 }
               />
+              <Route
+                path="/batches/:batchId/labels"
+                element={
+                  <Layout>
+                    <UnitLabels />
+                  </Layout>
+                }
+              />
             </Route>
 
             {/* Admin specific console routes */}
@@ -93,6 +117,22 @@ const App = () => {
                 element={
                   <Layout>
                     <AdminDashboard />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/admin/governance"
+                element={
+                  <Layout>
+                    <GovernancePage />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/admin/returns"
+                element={
+                  <Layout>
+                    <ReturnsPage />
                   </Layout>
                 }
               />

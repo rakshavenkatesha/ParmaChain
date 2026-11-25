@@ -51,6 +51,12 @@ const userSchema = new mongoose.Schema(
       type: String, // Ethereum wallet address
       trim: true,
       lowercase: true
+    },
+    // Coarse operating location (city centre), used by the off-chain geo scan analytics
+    location: {
+      city: { type: String, trim: true },
+      lat: { type: Number },
+      lon: { type: Number }
     }
   },
   {
@@ -59,10 +65,9 @@ const userSchema = new mongoose.Schema(
 );
 
 // Encrypt password using bcrypt before saving
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    next();
-  }
+userSchema.pre("save", async function () {
+  // Only hash when the password itself changed (previously fell through and re-hashed on every save)
+  if (!this.isModified("password")) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });

@@ -1,18 +1,48 @@
 {
   "name": "pharma-supplychain-blockchain",
   "version": "1.0.0",
-  "description": "Smart contracts for pharmaceutical supply chain",
+  "description": "PharmaChain smart contracts, consortium network tooling and evaluation",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
     "node": "hardhat node",
-    "deploy:local": "hardhat run scripts/deploy.js --network localhost"
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:besu": "hardhat run scripts/deploy.js --network besu",
+    "network:genesis": "node scripts/network/generate-genesis.js",
+    "network:up": "cd ../network && docker compose up -d",
+    "network:down": "cd ../network && docker compose down",
+    "network:validators": "node scripts/network/validator-vote.js list",
+    "demo:besu": "hardhat run scripts/demo-scenario.js --network besu",
+    "demo:local": "hardhat run scripts/demo-scenario.js --network localhost",
+    "benchmark": "hardhat run scripts/benchmark.js",
+    "bench:load": "hardhat run scripts/network/load-test.js --network besu",
+    "bench:fault": "node scripts/network/fault-tolerance.js",
+    "deploy:zk": "hardhat run scripts/zk/deploy-zk.js --network besu",
+    "deploy:all": "npm run deploy:besu && npm run deploy:zk && npm run checkpoint:deploy",
+    "zk:build": "node scripts/zk/build.js",
+    "bench:zk": "hardhat run scripts/zk/benchmark-zk.js",
+    "public:node": "hardhat node --port 8600",
+    "checkpoint:deploy": "hardhat run scripts/checkpoint/deploy-anchor.js --network publicLocal",
+    "checkpoint:publish": "node scripts/checkpoint/publisher.js",
+    "checkpoint:audit": "node scripts/checkpoint/audit.js",
+    "sensor:sim": "hardhat run scripts/simulate-sensor.js --network besu",
+    "fuzz": "docker run --rm -v \"%cd%:/work\" -w /work --entrypoint forge ghcr.io/foundry-rs/foundry:latest test",
+    "slither": "slither . --compile-force-framework hardhat --hardhat-ignore-compile --filter-paths \"node_modules|contracts/benchmark|forge-test\" --exclude-dependencies",
+    "network:stop": "cd ../network && docker compose stop",
+    "network:start": "cd ../network && docker compose start",
+    "network:reset": "cd ../network && docker compose down -v",
+    "deploy:fresh": "node -e \"require('child_process').execSync('npx hardhat run scripts/deploy.js --network besu && npx hardhat run scripts/zk/deploy-zk.js --network besu',{stdio:'inherit',env:{...process.env,REDEPLOY:'1'}})\""
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.2"
+    "@openzeppelin/contracts": "^5.0.2",
+    "@prb/math": "^4.1.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "hardhat": "^2.22.5"
+    "circom2": "^0.2.23",
+    "circomlib": "^2.0.5",
+    "hardhat": "^2.22.5",
+    "poseidon-lite": "^0.3.0",
+    "snarkjs": "^0.7.6"
   }
 }

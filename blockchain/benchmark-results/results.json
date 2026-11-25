@@ -1,0 +1,263 @@
+{
+  "network": "hardhat",
+  "generatedAt": "2026-11-24T14:08:56.435Z",
+  "e1": [
+    {
+      "n": 10,
+      "ours": 397072,
+      "labelGenerationMs": 19,
+      "packaging": "8 packs/carton, 4 cartons/case",
+      "naive": 250444,
+      "naiveTxs": 1,
+      "nft": 293784,
+      "nftTxs": 1,
+      "batchLevel": 90274
+    },
+    {
+      "n": 100,
+      "ours": 379984,
+      "labelGenerationMs": 108,
+      "packaging": "8 packs/carton, 4 cartons/case",
+      "naive": 2304550,
+      "naiveTxs": 1,
+      "nft": 2522092,
+      "nftTxs": 1,
+      "batchLevel": 90274
+    },
+    {
+      "n": 1000,
+      "ours": 380008,
+      "labelGenerationMs": 815,
+      "packaging": "32 packs/carton, 16 cartons/case",
+      "naive": 22867768,
+      "naiveTxs": 2,
+      "nft": 25060348,
+      "nftTxs": 4,
+      "batchLevel": 90286
+    },
+    {
+      "n": 10000,
+      "ours": 380020,
+      "labelGenerationMs": 6526,
+      "packaging": "32 packs/carton, 16 cartons/case",
+      "naive": 228679264,
+      "naiveTxs": 20,
+      "nft": 250603804,
+      "nftTxs": 40,
+      "batchLevel": 90286
+    },
+    {
+      "n": 100000,
+      "ours": 380044,
+      "labelGenerationMs": 57910,
+      "packaging": "32 packs/carton, 16 cartons/case",
+      "naive": 2286792640,
+      "naiveTxs": 200,
+      "nft": 2506038040,
+      "nftTxs": 400,
+      "extrapolated": true,
+      "batchLevel": 90298
+    }
+  ],
+  "e2": {
+    "lot": {
+      "N": 4096,
+      "ppc": 32,
+      "cpc": 8
+    },
+    "rows": [
+      {
+        "k": 1,
+        "singleTotal": 88785,
+        "singlePerPack": 88785,
+        "batchTotal": 96969,
+        "batchPerPack": 96969,
+        "saving": "-9.2%"
+      },
+      {
+        "k": 2,
+        "singleTotal": 160502,
+        "singlePerPack": 80251,
+        "batchTotal": 101986,
+        "batchPerPack": 50993,
+        "saving": "36.5%"
+      },
+      {
+        "k": 4,
+        "singleTotal": 303940,
+        "singlePerPack": 75985,
+        "batchTotal": 113478,
+        "batchPerPack": 28370,
+        "saving": "62.7%"
+      },
+      {
+        "k": 8,
+        "singleTotal": 590880,
+        "singlePerPack": 73860,
+        "batchTotal": 137760,
+        "batchPerPack": 17220,
+        "saving": "76.7%"
+      },
+      {
+        "k": 16,
+        "singleTotal": 1164716,
+        "singlePerPack": 72795,
+        "batchTotal": 187718,
+        "batchPerPack": 11732,
+        "saving": "83.9%"
+      },
+      {
+        "k": 32,
+        "singleTotal": 2311940,
+        "singlePerPack": 72248,
+        "batchTotal": 289067,
+        "batchPerPack": 9033,
+        "saving": "87.5%"
+      }
+    ],
+    "nftBurn": 33489,
+    "naiveDispense": 47137
+  },
+  "e2c": [
+    {
+      "method": "acceptShipment (no physical check)",
+      "scans": 0,
+      "gas": 91480,
+      "packsCovered": 1152
+    },
+    {
+      "method": "verify every pack on receipt (estimate)",
+      "scans": 1152,
+      "gas": 56755584,
+      "packsCovered": 1152,
+      "estimate": true
+    },
+    {
+      "method": "acceptWithAggregation (case labels)",
+      "scans": 3,
+      "gas": 109854,
+      "packsCovered": 1152
+    },
+    {
+      "method": "acceptWithAggregation (carton labels, split shipment)",
+      "scans": 3,
+      "gas": 118330,
+      "packsCovered": 96
+    }
+  ],
+  "e3": {
+    "K": 10,
+    "C": 3,
+    "presentations": 40,
+    "fakes": 30,
+    "results": {
+      "two-part": {
+        "fakeFlagged": 30,
+        "genuineFlagged": 0,
+        "genuineDispensed": 10,
+        "duplicatesFlagged": 30,
+        "fakeDetectionRate": 1,
+        "genuineFalseFlagRate": 0
+      },
+      "one-part": {
+        "fakeFlagged": 23,
+        "genuineFlagged": 7,
+        "genuineDispensed": 3,
+        "duplicatesFlagged": 30,
+        "fakeDetectionRate": 0.7666666666666667,
+        "genuineFalseFlagRate": 0.7
+      },
+      "nft": {
+        "fakeFlagged": 23,
+        "genuineFlagged": 7,
+        "genuineDispensed": 3,
+        "duplicatesFlagged": 30,
+        "fakeDetectionRate": 0.7666666666666667,
+        "genuineFalseFlagRate": 0.7
+      },
+      "batchLevel": {
+        "fakeFlagged": 0,
+        "genuineFlagged": 0,
+        "genuineDispensed": 10,
+        "duplicatesFlagged": 0,
+        "fakeDetectionRate": 0,
+        "genuineFalseFlagRate": 0
+      },
+      "scanHeuristic": {
+        "fakeFlagged": 0,
+        "genuineFlagged": 0,
+        "genuineDispensed": 10,
+        "duplicatesFlagged": 0,
+        "fakeDetectionRate": 0,
+        "genuineFalseFlagRate": 0
+      }
+    }
+  },
+  "e6": {
+    "rows": [
+      {
+        "scenario": "in range (5 degC)",
+        "truth": "no breach",
+        "ours": "not quarantined",
+        "oursCorrect": true,
+        "single": "not quarantined",
+        "singleCorrect": true,
+        "finalMktC": 5
+      },
+      {
+        "scenario": "short spike (one 15 degC reading)",
+        "truth": "no breach",
+        "ours": "not quarantined",
+        "oursCorrect": true,
+        "single": "quarantined (window 21)",
+        "singleCorrect": false,
+        "finalMktC": 5.5
+      },
+      {
+        "scenario": "sustained mild excursion (10.5 degC)",
+        "truth": "breach",
+        "ours": "quarantined (window 23)",
+        "oursCorrect": true,
+        "single": "quarantined (window 13)",
+        "singleCorrect": true,
+        "finalMktC": 8.1
+      },
+      {
+        "scenario": "freezing (-1.5 degC)",
+        "truth": "breach",
+        "ours": "quarantined (window 11)",
+        "oursCorrect": true,
+        "single": "quarantined (window 11)",
+        "singleCorrect": true,
+        "finalMktC": 4.6
+      },
+      {
+        "scenario": "faulty sensor stuck at 30 degC (true 5 degC)",
+        "truth": "no breach",
+        "ours": "not quarantined",
+        "oursCorrect": true,
+        "single": "quarantined (window 1)",
+        "singleCorrect": false,
+        "finalMktC": 5
+      },
+      {
+        "scenario": "malicious sensor reports 5 degC (true 11 degC)",
+        "truth": "breach",
+        "ours": "quarantined (window 18)",
+        "oursCorrect": true,
+        "single": "not quarantined",
+        "singleCorrect": false,
+        "finalMktC": 8.2
+      }
+    ],
+    "gasPerSubmission": 123809,
+    "ours": {
+      "falseQuarantines": 0,
+      "missedBreaches": 0
+    },
+    "single": {
+      "falseQuarantines": 2,
+      "missedBreaches": 1
+    }
+  }
+}

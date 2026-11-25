@@ -1,7 +1,8 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { ShieldCheck, Mail, KeyRound, Building2, Award, User, Wallet } from "lucide-react";
+import { ShieldCheck, Mail, KeyRound, Building2, Award, User, Wallet, MapPin } from "lucide-react";
+import { CITIES, findCity } from "../utils/cities";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -12,7 +13,8 @@ const Register = () => {
     companyName: "",
     licenseNumber: "",
     ethAddress: "",
-    licenseDocumentUrl: ""
+    licenseDocumentUrl: "",
+    city: ""
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,9 +28,9 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { name, email, password, companyName, licenseNumber, ethAddress } = formData;
+    const { name, email, password, companyName, licenseNumber, ethAddress, city } = formData;
 
-    if (!name || !email || !password || !companyName || !licenseNumber || !ethAddress) {
+    if (!name || !email || !password || !companyName || !licenseNumber || !ethAddress || !city) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -48,8 +50,11 @@ const Register = () => {
     setError("");
 
     // Setup a placeholder license URL to satisfy Mongoose requirements if any
+    const c = findCity(city);
+    const { city: _city, ...rest } = formData;
     const finalData = {
-      ...formData,
+      ...rest,
+      location: c ? { city: c.city, lat: c.lat, lon: c.lon } : undefined,
       licenseDocumentUrl: "https://res.cloudinary.com/demo/image/upload/sample.pdf"
     };
 
@@ -158,7 +163,6 @@ const Register = () => {
                   <option value="Pharmacy">Pharmacy</option>
                   <option value="Distributor">Distributor</option>
                   <option value="Manufacturer">Manufacturer</option>
-                  <option value="Admin">System Admin</option>
                 </select>
               </div>
 
@@ -216,6 +220,28 @@ const Register = () => {
                     className="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-sky-500 transition text-slate-200 font-mono text-xs"
                   />
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                Operating City * <span className="normal-case tracking-normal text-slate-500">(used to flag packs sold far from where they were supplied)</span>
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
+                <select
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-sky-500 transition text-slate-200"
+                >
+                  <option value="">Select city…</option>
+                  {CITIES.map((c) => (
+                    <option key={c.city} value={c.city}>
+                      {c.city}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
